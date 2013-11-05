@@ -60,28 +60,26 @@ public class PlayRequestResponseBroker extends AbstractRequestResponseBroker<Req
 
 	public Object getAttribute(String key)
 	{
+/*
+		CacheManager singletonManager = CacheManager.create();
+		singletonManager.addCache("testCache");
+		net.sf.ehcache.Cache test = singletonManager.getCache("testCache");
+		test.put(new Element("a", "result"));
+		test.get("a").getObjectValue();
+*/
 		return Cache.get(key);
-
-//		if(_session == null) return null;
-//		else return _session.get(key);
 	}
 
 
 	public void setAttribute(String key, Object value)
 	{
 		Cache.set(key, value);
-		
-//		if(_session == null) return;
-//		_session.put(key, "" + value);
 	}
 
 
 	public void removeAttribute(String key)
 	{
 		Cache.remove(key);
-
-//		if(_session == null) return;
-//		_session.remove(key);
 	}
 
 
