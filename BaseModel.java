@@ -100,7 +100,7 @@ public abstract class BaseModel<IdType>
 	public void setDateDeleted(Date dateDeleted){ this.dateDeleted = dateDeleted; }
 
 	
-	public abstract BaseManager<? extends BaseModel<?>, ?, ? extends BasicAccessor<? extends BaseModel<?>, ?>> getManager();
+	public abstract BaseManager<?, ? extends BaseModel<?>, ?, ? extends BasicAccessor<? extends BaseModel<?>, ?>> getManager();
 	
 
 	@Override

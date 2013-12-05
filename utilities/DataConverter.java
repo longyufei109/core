@@ -10,6 +10,7 @@ import com.subdigit.data.BasicAccessor;
 import com.subdigit.data.BaseManager;
 import com.subdigit.data.BaseModel;
 import com.subdigit.data.result.ModelTransactionResult.KeyTransactionResult;
+import com.subdigit.utilities.Converter;
 
 
 public class DataConverter
@@ -44,7 +45,7 @@ public class DataConverter
 			Date date = null;
 
 			try {
-				date = new Date(Long.parseLong(value));
+				date = new Date(Converter.tolong(value));
 			} catch(NumberFormatException e){
 				result.setState(KeyTransactionResult.State.CONVERSIONFAILED);
 				return null;
@@ -74,7 +75,7 @@ public class DataConverter
 			BaseModel<?> model = null;
 
 			@SuppressWarnings("unchecked")
-			BaseManager<? extends BaseModel<?>, ?, ? extends BasicAccessor<? extends BaseModel<?>, ?>> manager = getManager((Class<BaseModel<?>>) type);
+			BaseManager<?, ? extends BaseModel<?>, ?, ? extends BasicAccessor<? extends BaseModel<?>, ?>> manager = getManager((Class<BaseModel<?>>) type);
 
 			if(manager != null){
 				model = manager.getById(value);
@@ -111,7 +112,7 @@ public class DataConverter
 //	}
 
 //	@SuppressWarnings("unchecked")
-	public static BaseManager<? extends BaseModel<?>, ?, ? extends BasicAccessor<? extends BaseModel<?>, ?>> getManager(Class<BaseModel<?>> type)
+	public static BaseManager<?, ? extends BaseModel<?>, ?, ? extends BasicAccessor<? extends BaseModel<?>, ?>> getManager(Class<BaseModel<?>> type)
 	{
 		try {
 			BaseModel<?> model = (BaseModel<?>) Class.forName(type.getCanonicalName()).newInstance();

@@ -4,13 +4,15 @@ import java.io.IOException;
 
 import org.bson.types.ObjectId;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.subdigit.result.BasicResult;
+import com.google.common.net.MediaType;
+import com.subdigit.result.WebResult;
 
 
 public final class BaseModelModule extends SimpleModule
@@ -22,10 +24,10 @@ public final class BaseModelModule extends SimpleModule
 //		addDeserializer(ObjectId.class, new ObjectIdDeserializer());
 		addSerializer(ObjectId.class, new ObjectIdSerializer());
 		addSerializer(Enum.class, new EnumSerializer());
+		addSerializer(MediaType.class, new MediaTypeSerializer());
 
 		// https://github.com/FasterXML/jackson-databind/issues/274
-		setMixInAnnotation(BasicResult.class, BasicResultMixIn.class);
-//		setMixInAnnotation(ServiceResult.class, BasicResultMixIn.class);
+		setMixInAnnotation(WebResult.class, WebResultMixIn.class);
 	}
 
 
@@ -54,7 +56,19 @@ public final class BaseModelModule extends SimpleModule
 	}
 
 
-	public class BasicResultMixIn
+	public class MediaTypeSerializer extends JsonSerializer<MediaType>
+	{
+		@Override
+		public void serialize(MediaType value, JsonGenerator generator, SerializerProvider provider) throws IOException, JsonProcessingException
+		{
+			if(value != null){
+				generator.writeString(value.toString());
+			}
+		}
+	}
+
+	
+	public class WebResultMixIn
 	{
 		@JsonProperty("success")
 		String success;
@@ -65,7 +79,14 @@ public final class BaseModelModule extends SimpleModule
 		@JsonProperty("status")
 		String statusArchive;
 
-		@JsonProperty("parameters")
+		@JsonProperty("results")
+		String resultList;
+
+		@JsonProperty("statuscode")
+		String statusCode;
+		
+//		@JsonProperty("parameters")
+		@JsonIgnore
 		String dataStore;
 	}
 }

@@ -1,4 +1,4 @@
-package com.subdigit.data.connector;
+package com.subdigit.data.connector.morphia;
 
 import java.net.UnknownHostException;
 
@@ -7,6 +7,7 @@ import org.mongodb.morphia.Morphia;
 
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
+import com.subdigit.data.connector.DataConnectorConfiguration;
 
 
 public class MorphiaDataConnector

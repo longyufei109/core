@@ -1,4 +1,4 @@
-package com.subdigit.data.play;
+package com.subdigit.data;
 
 import java.util.List;
 
@@ -6,58 +6,54 @@ import javax.validation.constraints.NotNull;
 
 import org.apache.http.HttpStatus;
 
-import play.api.templates.Html;
-import play.data.Form;
-import play.mvc.Call;
-import play.mvc.Controller;
-import play.mvc.Result;
-
-import com.subdigit.acronymity.data.models.User;
-import com.subdigit.broker.PlayRequestResponseBroker;
-import com.subdigit.data.BaseManager;
-import com.subdigit.data.BaseModel;
-import com.subdigit.data.BaseService;
-import com.subdigit.data.BasicAccessor;
+import com.subdigit.broker.RequestResponseBroker;
 import com.subdigit.data.result.ModelTransactionResult;
+import com.subdigit.request.WebRequest;
 import com.subdigit.result.BasicResult.StatusLevel;
 import com.subdigit.result.ServiceResult;
+import com.subdigit.result.WebResult;
 
 
-//public abstract class AbstractModelControllerHelper<T extends BaseService<BaseModel, ObjectId, BaseManager<BaseModel,ObjectId>>,K extends BaseModel> extends Controller
-//public abstract class AbstractModelControllerHelper<T extends BaseService<BaseModel,L,BaseManager<K,L>>, K extends BaseModel, L> extends Controller
-//@SuppressWarnings({"rawtypes", "unchecked"})
-public abstract class BaseController<T extends BaseModel<K>, K, X extends BasicAccessor<T, K>, Y extends BaseManager<T, K, X>, Z extends BaseService<T, K, X, Y>> extends Controller
-//public class AccountController extends AbstractModelControllerHelper<AccountService, AccountManager, Account, ObjectId>
-//public abstract class AbstractModelControllerHelper<T extends BaseService<K, Z, X>, X extends BaseManager<K, Z>, K extends BaseModel, Z> extends Controller
+public abstract class BaseInterceptor<UserType, T extends BaseModel<K>, K, X extends BasicAccessor<T, K>, Y extends BaseManager<UserType, T, K, X>, Z extends BaseService<UserType, T, K, X, Y>, ResultType, RenderTargetType, RedirectTargetType>
 {
 	protected Z _service;
-	protected Form<T> _dataForm;
 
 
-	public BaseController()
+	public BaseInterceptor()
 	{
 		_service = initializeService();
-		_dataForm = initializeDataForm();
 	}
 
 
 	protected abstract Z initializeService();
-	protected abstract Form<T> initializeDataForm();
-	protected abstract Html getSingleItemHtmlRenderTarget(T model);	// views.html.acronyms.item.render(acronym);
-	protected abstract Call getSingleItemDisplayRedirectRoute(String id);	// routes.UserController.getUser(model.getId().toString())
+	protected abstract RequestResponseBroker<?,?,?> getNewBroker();
+	protected abstract WebResult<T,ResultType,RenderTargetType,RedirectTargetType> getNewResult(WebRequest<UserType> request);
+	protected abstract WebRequest<UserType> getNewRequest(RequestResponseBroker<?,?,?> broker, WebRequest.Action action);
 
-	protected abstract boolean isAllowedToRetrieve(@NotNull ServiceResult<T> result);
-	protected abstract boolean isAllowedToCreate(@NotNull ServiceResult<T> result);
-	protected abstract boolean isAllowedToUpdate(@NotNull ServiceResult<T> result, @NotNull T model);
-	protected abstract boolean isAllowedToDelete(@NotNull ServiceResult<T> result, @NotNull T model);
+	protected abstract RenderTargetType getRenderTarget(T model);
+	protected abstract RedirectTargetType getRedirectTarget(String id);
+	
+	protected abstract boolean isAllowedToRetrieve(@NotNull ServiceResult<T> result, UserType userType);
+	protected abstract boolean isAllowedToCreate(@NotNull ServiceResult<T> result, UserType userType);
+	protected abstract boolean isAllowedToUpdate(@NotNull ServiceResult<T> result, UserType userType, @NotNull T model);
+	protected abstract boolean isAllowedToDelete(@NotNull ServiceResult<T> result, UserType userType, @NotNull T model);
 
-	protected abstract T setCreateOverrides(T model);
+	protected abstract T setCreateOverrides(UserType userType, T model);
 
 
-	public Result getList()
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> getList()
 	{
-		ServiceResult<T> result = new ServiceResult<T>(new PlayRequestResponseBroker(request(), response(), session()), ServiceResult.Action.GET);
-		List<T> resultList = _service.retrieve(result.getParameters());
+		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.GET);
+//		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.GET);
+		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
+//		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = new WebResult<T,ResultType,RenderTargetType,RedirectTargetType>(request);
+
+		// Is this request authorized to retrieve?
+		if(!isAllowedToRetrieve(result, request.getAuthenticatedUser())){
+			return result;
+		}
+		
+		List<T> resultList = _service.retrieve(request.getParameters());
 
 		if(resultList == null){
 			result.setSuccess(false);
@@ -70,13 +66,14 @@ public abstract class BaseController<T extends BaseModel<K>, K, X extends BasicA
 			result.addResults(resultList);
 		}
 
-		return result.process();
+		return result;
 	}
 
 
-	public Result get(String value)
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> get(String value)
 	{
-		ServiceResult<T> result = new ServiceResult<T>(new PlayRequestResponseBroker(request(), response(), session()), ServiceResult.Action.GET);
+		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.GET);
+		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
 		T model = null;
 
 		// Stop if we aren't provided with anything.
@@ -85,9 +82,14 @@ public abstract class BaseController<T extends BaseModel<K>, K, X extends BasicA
 			result.setStatusCode(HttpStatus.SC_NOT_FOUND);
 			result.addStatus(HttpStatus.SC_NOT_FOUND, "Id provided was null.", StatusLevel.FATAL);
 
-			return result.process();
+			return result;
 		}
 
+		// Is this request authorized to retrieve?
+		if(!isAllowedToRetrieve(result, request.getAuthenticatedUser())){
+			return result;
+		}
+		
 		// Check to see if this is a valid Id.
 		try {
 			model = _service.retrieveById(value);
@@ -101,7 +103,7 @@ public abstract class BaseController<T extends BaseModel<K>, K, X extends BasicA
 			result.setStatusCode(HttpStatus.SC_NOT_FOUND);
 			result.addStatus(HttpStatus.SC_NOT_FOUND, "Id provided could not be found: " + value + ".", StatusLevel.FATAL);
 
-			return result.process();
+			return result;
 		}
 
 		// Found something!  Register and process the results.
@@ -110,30 +112,32 @@ public abstract class BaseController<T extends BaseModel<K>, K, X extends BasicA
 		result.addResult(model);
 
 		// If the request type turns out to be HTML, this is what we will render.
-		result.setRenderTarget(getSingleItemHtmlRenderTarget(model));
+		result.setRenderTarget(getRenderTarget(model));
 
-		return result.process();
+		return result;
 	}
 
 
-	public Result create()
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> create()
 	{
-		PlayRequestResponseBroker broker = new PlayRequestResponseBroker(request(), response(), session());
+		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.CREATE);
+		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
 		ModelTransactionResult<T> createResult = null;
-		ServiceResult<T> result = new ServiceResult<T>(broker, ServiceResult.Action.CREATE);
 		T model = null;
 
 		// Is this request authorized to create?
-		if(!isAllowedToCreate(result)) return result.process();
+		if(!isAllowedToCreate(result, request.getAuthenticatedUser())){
+			return result;
+		}
 
 		// Got something, let's see if we can create an object out of it.
-		createResult = _service.instantiateModel(broker.extractRequestData());
+		createResult = _service.instantiateModel(request.getParameters());
 		result.setTransactions(createResult.getTransactions());
 
 		// Let see what the result was...
 		if(createResult.success()){
 			model = createResult.getModel();
-			model = setCreateOverrides(model);
+			model = setCreateOverrides(request.getAuthenticatedUser(), model);
 
 			// Only try to create if we have a green light everything else.
 			model = _service.create(model);
@@ -149,7 +153,7 @@ public abstract class BaseController<T extends BaseModel<K>, K, X extends BasicA
 				result.setSuccess(true);
 				result.setStatusCode(HttpStatus.SC_CREATED);
 				result.addResult(model);
-				result.setRedirectTarget(getSingleItemDisplayRedirectRoute(model.getId().toString()));
+				result.setRedirectTarget(getRedirectTarget(model.getId().toString()));
 				result.setRedirect(true);
 			}
 		} else {
@@ -158,13 +162,13 @@ public abstract class BaseController<T extends BaseModel<K>, K, X extends BasicA
 			result.addStatus(HttpStatus.SC_BAD_REQUEST, "Could not create with the information provided.", StatusLevel.FATAL);
 		}
 
-		return result.process();
+		return result;
 	}
 
 /*	
 	public Result create_ORIG()
 	{
-		ServiceResult result = new ServiceResult(new PlayRequestResponseBroker(request(), response(), session()));
+		ServiceResult result = new ServiceResult(getNewBroker());
 		Form<T> filledForm = _dataForm.bindFromRequest();
 		T model = null;
 
@@ -191,11 +195,12 @@ System.err.println("Adding bad request status on create");
 	}
 */
 
-	public Result update(String value)
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> update(String value)
 	{
-		PlayRequestResponseBroker broker = new PlayRequestResponseBroker(request(), response(), session());
+		RequestResponseBroker<?,?,?> broker = getNewBroker();
+		WebRequest<UserType> request = getNewRequest(broker, WebRequest.Action.UPDATE);
+		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
 		ModelTransactionResult<T> updateResult = null;
-		ServiceResult<T> result = new ServiceResult<T>(broker, ServiceResult.Action.UPDATE);
 //		Form<K> filledForm = _dataForm.bindFromRequest();
 		T model = null;
 
@@ -205,7 +210,7 @@ System.err.println("Adding bad request status on create");
 			result.setStatusCode(HttpStatus.SC_NOT_FOUND);
 			result.addStatus(HttpStatus.SC_NOT_FOUND, "Id provided was null.", StatusLevel.FATAL);
 
-			return result.process();
+			return result;
 		}
 
 		// Check to see if this is a valid Id.
@@ -221,14 +226,16 @@ System.err.println("Adding bad request status on create");
 			result.setStatusCode(HttpStatus.SC_NOT_FOUND);
 			result.addStatus(HttpStatus.SC_NOT_FOUND, "Id provided could not be found: " + value + ".", StatusLevel.FATAL);
 
-			return result.process();
+			return result;
 		}
 
 		// Is this request authorized to update?
-		if(!isAllowedToUpdate(result, model)) return result.process();
+		if(!isAllowedToUpdate(result, request.getAuthenticatedUser(), model)){
+			return result;
+		}
 
 		// Found something!  Update it and process the results.
-		updateResult = _service.update(broker.getSessionUser(), model, broker.extractRequestData());
+		updateResult = _service.update(request.getAuthenticatedUser(), model, request.getParameters());
 		result.setTransactions(updateResult.getTransactions());
 
 		// Let see what the result was...
@@ -239,7 +246,7 @@ System.err.println("Adding bad request status on create");
 			result.setStatusCode(HttpStatus.SC_OK);
 			result.addResult(model);
 			if(model != null && model.getId() != null){
-				result.setRedirectTarget(getSingleItemDisplayRedirectRoute(model.getId().toString()));
+				result.setRedirectTarget(getRedirectTarget(model.getId().toString()));
 				result.setRedirect(true);
 			}
 		} else {
@@ -248,13 +255,14 @@ System.err.println("Adding bad request status on create");
 			result.addStatus(HttpStatus.SC_BAD_REQUEST, "Could not save with the information provided.", StatusLevel.FATAL);
 		}
 
-		return result.process();
+		return result;
 	}
 
 
-	public Result delete(String id)
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> delete(String id)
 	{
-		ServiceResult<T> result = new ServiceResult<T>(new PlayRequestResponseBroker(request(), response(), session()), ServiceResult.Action.DELETE);
+		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.DELETE);
+		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
 		T model = null;
 		
 		// Stop if we aren't provided with anything.
@@ -263,7 +271,7 @@ System.err.println("Adding bad request status on create");
 			result.setStatusCode(HttpStatus.SC_NOT_FOUND);
 			result.addStatus(HttpStatus.SC_NOT_FOUND, "Id provided was null.", StatusLevel.FATAL);
 
-			return result.process();
+			return result;
 		}
 
 		// Check to see if this is a valid Id.
@@ -279,11 +287,13 @@ System.err.println("Adding bad request status on create");
 			result.setStatusCode(HttpStatus.SC_NOT_FOUND);
 			result.addStatus(HttpStatus.SC_NOT_FOUND, "Id provided could not be found: " + id + ".", StatusLevel.FATAL);
 
-			return result.process();
+			return result;
 		}
 
 		// Is this request authorized to delete?
-		if(!isAllowedToDelete(result, model)) return result.process();
+		if(!isAllowedToDelete(result, request.getAuthenticatedUser(), model)){
+			return result;
+		}
 		
 		// Found something!  Delete it and process the results.
 		_service.delete(model);
@@ -295,46 +305,33 @@ System.err.println("Adding bad request status on create");
 //		result.setRedirectTarget(getSingleItemDisplayRedirectRoute(model.getId().toString()));
 //		result.setRedirect(true);
 		
-		return result.process();
+		return result;
 	}
 
 
-	public Result restricted(ServiceResult.Action action, String message)
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> restricted(WebRequest.Action action, String message)
 	{
-		ServiceResult<T> result = new ServiceResult<T>(new PlayRequestResponseBroker(request(), response(), session()), action);
+//		WebRequest<UserType> request = getNewRequest(action);
+		WebRequest<UserType> request = getNewRequest(getNewBroker(), action);
+		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
 
 		result.setSuccess(false);
 		result.setStatusCode(HttpStatus.SC_METHOD_NOT_ALLOWED);
 		result.addStatus(HttpStatus.SC_METHOD_NOT_ALLOWED, message, StatusLevel.FATAL);
 
-		return result.process();
+		return result;
 	}
 
 
-	public Result unknown(String action)
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> unknown(String action)
 	{
-		ServiceResult<T> result = new ServiceResult<T>(new PlayRequestResponseBroker(request(), response(), session()), ServiceResult.Action.UNKNOWN);
+		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.UNKNOWN);
+		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
 
 		result.setSuccess(false);
 		result.setStatusCode(HttpStatus.SC_PAYMENT_REQUIRED);
 		result.addStatus(HttpStatus.SC_PAYMENT_REQUIRED, "Ah, we haven't implemented the '" + action + "' action to do whatever you wanted to do.  Perhaps if the status code requirement was met...", StatusLevel.FATAL);
 
-		return result.process();
-	}
-
-
-	public void setSessionUser(User user)
-	{
-		PlayRequestResponseBroker broker = new PlayRequestResponseBroker(request(), response(), session());
-
-		broker.setSessionUser(user);
-	}
-
-
-	public User getSessionUser()
-	{
-		PlayRequestResponseBroker broker = new PlayRequestResponseBroker(request(), response(), session());
-
-		return broker.getSessionUser();
+		return result;
 	}
 }

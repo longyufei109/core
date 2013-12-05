@@ -5,9 +5,9 @@ import java.util.Map;
 
 import org.mongodb.morphia.query.Query;
 
-import com.subdigit.acronymity.data.models.User;
 import com.subdigit.data.result.ModelTransactionResult;
 import com.subdigit.data.result.ModelTransactionResult.KeyTransactionResult;
+import com.subdigit.utilities.Converter;
 
 /**
  * All the business logic for handling the User class goes here.  Basically,
@@ -17,8 +17,12 @@ import com.subdigit.data.result.ModelTransactionResult.KeyTransactionResult;
  * @author subdigit
  *
  */
-public abstract class BaseService<ModelType extends BaseModel<KeyType>, KeyType, AccessorType extends BasicAccessor<ModelType, KeyType>, ManagerType extends BaseManager<ModelType, KeyType, AccessorType>>
+public abstract class BaseService<UserType, ModelType extends BaseModel<IdType>, IdType, AccessorType extends BasicAccessor<ModelType, IdType>, ManagerType extends BaseManager<UserType, ModelType, IdType, AccessorType>>
 {
+	public static final int DEFAULT_LIMIT = 20;
+	public static final int MAX_LIMIT = 100;
+
+
 	protected ManagerType _manager;
 
 
@@ -87,18 +91,41 @@ System.err.println("Checking key: " + key);
 	}
 
 	public List<ModelType> retrieve(){ return _manager.get(); }
-	public ModelType retrieveById(KeyType value){ return _manager.getById(value); }
+	public ModelType retrieveById(IdType value){ return _manager.getById(value); }
 	public ModelType retrieveById(String value){ return _manager.getById(value); }
 	public List<ModelType> retrieve(Query<ModelType> value){ return _manager.get(value); }
-	public List<ModelType> retrieve(Map<String,String> parameters){ return _manager.get(parameterizedQuery(createQuery(), parameters)); }
+	public List<ModelType> retrieve(Map<String,String> parameters){ return _manager.get(parameterizedQuery(createBaseQuery(parameters), parameters)); }
 
-	public Query<ModelType> createQuery(){ return _manager.createQuery(); }
+	public Query<ModelType> createBaseQuery(Map<String,String> parameters)
+	{
+		Query<ModelType> query = _manager.createQuery();
+		int limit = DEFAULT_LIMIT;
+		int offset = 0;
+		int page = 1;
+
+		if(query == null) return query;
+		
+		if(parameters != null){
+			if(parameters.containsKey("limit")){
+				limit = Converter.toint(parameters.get("limit"), limit);
+				if(limit > MAX_LIMIT) limit = MAX_LIMIT;
+			}
+			
+			if(parameters.containsKey("page")){
+				offset = (Converter.toint(parameters.get("page"), page)-1) * limit;
+			}
+		}
+
+		query.limit(limit).offset(offset);
+
+		return query;
+	}
 	protected abstract Query<ModelType> parameterizedQuery(Query<ModelType> query, Map<String,String> parameters);
 
 	public ModelType update(ModelType value){ return _manager.save(value); }
 	
-	public ModelTransactionResult<ModelType> update(User user, String id, Map<String,String> parameterMap){ return update(user, retrieveById(id), parameterMap); }
-	public ModelTransactionResult<ModelType> update(User user, ModelType model, Map<String,String> parameterMap)
+	public ModelTransactionResult<ModelType> update(UserType user, String id, Map<String,String> parameterMap){ return update(user, retrieveById(id), parameterMap); }
+	public ModelTransactionResult<ModelType> update(UserType user, ModelType model, Map<String,String> parameterMap)
 	{
 		boolean success = true;
 		KeyTransactionResult keyUpdateResult = null;
@@ -152,7 +179,7 @@ System.err.println("Model after: " + updateResult.getModel());
 
 
 	public ModelType delete(ModelType value){ return _manager.delete(value); }
-	public ModelType deleteById(KeyType value){ return _manager.deleteById(value); }
+	public ModelType deleteById(IdType value){ return _manager.deleteById(value); }
 	public ModelType deleteById(String value){ return _manager.deleteById(value); }
 
 	public long count(){ return _manager.count(); }

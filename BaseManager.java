@@ -17,7 +17,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteResult;
-import com.subdigit.acronymity.data.models.User;
 import com.subdigit.data.result.ModelTransactionResult;
 import com.subdigit.data.result.ModelTransactionResult.KeyTransactionResult;
 import com.subdigit.data.utilities.DataConverter;
@@ -32,7 +31,7 @@ import com.subdigit.data.utilities.DataConverter;
  * @author subdigit
  *
  */
-public abstract class BaseManager<ModelType extends BaseModel<KeyType>, KeyType, AccessorType extends BasicAccessor<ModelType, KeyType>>
+public abstract class BaseManager<UserType, ModelType extends BaseModel<IdType>, IdType, AccessorType extends BasicAccessor<ModelType, IdType>>
 {
 	protected AccessorType _accessor;
 
@@ -50,7 +49,7 @@ public abstract class BaseManager<ModelType extends BaseModel<KeyType>, KeyType,
 
 
 	protected abstract AccessorType initializeAccessor();
-	protected abstract KeyType newKeyInstance(String value);
+	protected abstract IdType newKeyInstance(String value);
 	public abstract ModelType newModelInstance();
 	public abstract boolean validate(ModelType value);
 
@@ -66,7 +65,7 @@ public abstract class BaseManager<ModelType extends BaseModel<KeyType>, KeyType,
 	}
 
 
-	public ModelType getById(KeyType value){ return _accessor.get(value); }
+	public ModelType getById(IdType value){ return _accessor.get(value); }
 	public ModelType getById(String value){ return _accessor.get(newKeyInstance(value)); }
 
 
@@ -159,7 +158,7 @@ System.err.println("Validation failed during manager.save");
 		if(ur.getHadError()) return null;
 		else return value;
 	}
-	public ModelType deleteById(KeyType value){ return delete(getById(value)); }
+	public ModelType deleteById(IdType value){ return delete(getById(value)); }
 	public ModelType deleteById(String value){ return delete(getById(value)); }
 
 
@@ -220,7 +219,7 @@ System.err.println("Validation failed during manager.save");
 	}
 
 
-	public abstract boolean allowedToUpdateKey(@NotNull User user, @NotNull ModelType model, String key);
+	public abstract boolean allowedToUpdateKey(@NotNull UserType user, @NotNull ModelType model, String key);
 	public abstract boolean parameterRequirementCheck(@NotNull ModelTransactionResult<ModelType> result, Map<String,String> parameterMap);
 
 	protected boolean mustBePresent(@NotNull ModelTransactionResult<ModelType> result, String key, Map<String,String> parameterMap)
