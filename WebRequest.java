@@ -4,14 +4,14 @@ import com.google.common.net.MediaType;
 import com.subdigit.broker.RequestResponseBroker;
 
 
-public class WebRequest extends BasicRequest<String>
+public abstract class WebRequest<UserType> extends BasicRequest<String>
 {
 	public static final MediaType DEFAULT_MEDIATYPE		= MediaType.JSON_UTF_8;
 	public static final String KEY_ACTION				= "action";
 	public static final String KEY_VERSION				= "version";
 	public static final String KEY_FORMAT				= "format";
 
-	private RequestResponseBroker<?,?> _broker;
+	private RequestResponseBroker<?,?,?> _broker;
 	private String _version;
 	private Action _action;
 	private MediaType _mediaType;
@@ -20,14 +20,14 @@ public class WebRequest extends BasicRequest<String>
 	// This is to kill any use of this without passing in a valid request.
 	@SuppressWarnings("unused")
 	private WebRequest(){}
-	public WebRequest(RequestResponseBroker<?,?> broker){ this(broker, null); }
-	public WebRequest(RequestResponseBroker<?,?> broker, Action value)
+	public WebRequest(RequestResponseBroker<?,?,?> broker){ this(broker, null); }
+	public WebRequest(RequestResponseBroker<?,?,?> broker, Action value)
 	{
 		initialize(broker, value);
 	}
 
 	
-	public boolean initialize(RequestResponseBroker<?,?> broker, Action value)
+	public boolean initialize(RequestResponseBroker<?,?,?> broker, Action value)
 	{
 		boolean initialized = super.initialize();
 
@@ -51,8 +51,8 @@ public class WebRequest extends BasicRequest<String>
 	}
 
 
-	public RequestResponseBroker<?,?> getBroker(){ return _broker; }
-	public void setBroker(RequestResponseBroker<?,?> value){ _broker = value; }
+	public RequestResponseBroker<?,?,?> getBroker(){ return _broker; }
+	public void setBroker(RequestResponseBroker<?,?,?> value){ _broker = value; }
 
 
 	public String getVersion(){ return _version; }
@@ -127,6 +127,10 @@ public class WebRequest extends BasicRequest<String>
 		return mediaType.withoutParameters().toString();
 	}
 
+	
+	public abstract UserType getAuthenticatedUser();
+	public abstract void setAuthenticatedUser(UserType user);
+	
 
 	public enum Action
 	{
