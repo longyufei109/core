@@ -2,25 +2,18 @@ package com.subdigit.result;
 
 import java.util.Map;
 
-import org.apache.http.HttpStatus;
-
-import play.api.templates.Html;
-import play.mvc.Call;
-import play.mvc.Controller;
-import play.mvc.Result;
-
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.net.MediaType;
 import com.subdigit.data.json.helpers.BaseModelModule;
+import com.subdigit.request.BasicRequest;
 import com.subdigit.request.WebRequest;
-// import org.apache.http.HttpStatus; from Apache HttpComponents via http://stackoverflow.com/a/730341/223362
 
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.PROTECTED_AND_PUBLIC, getterVisibility=JsonAutoDetect.Visibility.NONE, isGetterVisibility=JsonAutoDetect.Visibility.NONE)
-public class WebResult<ResultType> extends ServiceResult<ResultType>
+public abstract class WebResult<ReturnObjectType, ResultType, RenderTargetType, RedirectTargetType> extends ServiceResult<ReturnObjectType>
 {
 	public static final MediaType DEFAULT_MEDIATYPE		= MediaType.JSON_UTF_8;
 	public static final boolean DEFAULT_AUTOMATICCOUNT	= true;
@@ -29,21 +22,21 @@ public class WebResult<ResultType> extends ServiceResult<ResultType>
 
     protected String version;
 	protected int count;
+    protected WebRequest.Action action;
     protected Map<String, String> parameters;
 
-	private WebRequest _request;
-
+    private WebRequest<?> _request;
 	private boolean _redirect;
-	private Call _redirectTarget;
+	private RedirectTargetType _redirectTarget;
 	private boolean _render;
-	private Html _renderTarget;
+	private RenderTargetType _renderTarget;
 	private boolean _automaticCount;
 
 
-	public WebResult(WebRequest value){ super(value); }
+	public WebResult(WebRequest<?> value){ super(value); }
 
 
-	protected boolean initialize(WebRequest value)
+	protected boolean initialize(BasicRequest<?> value)
 	{
 		boolean initialized = super.initialize(value);
 
@@ -53,8 +46,9 @@ public class WebResult<ResultType> extends ServiceResult<ResultType>
 		_render			= DEFAULT_RENDER;
 		_renderTarget	= null;
 		_automaticCount	= DEFAULT_AUTOMATICCOUNT;
-		_request		= value;
+		_request		= (WebRequest<?>) value;
 
+		action = _request.getAction();
 		version = _request.getVersion();
 		parameters = _request.getParameters();
 
@@ -67,16 +61,16 @@ public class WebResult<ResultType> extends ServiceResult<ResultType>
 	public boolean redirect(){ return getRedirect(); }
 	public void redirect(boolean value){ setRedirect(value); }
 
-	public Call getRedirectTarget(){ return _redirectTarget; }
-	public void setRedirectTarget(Call value){ _redirectTarget = value; }
+	public RedirectTargetType getRedirectTarget(){ return _redirectTarget; }
+	public void setRedirectTarget(RedirectTargetType value){ _redirectTarget = value; }
 
 	public boolean getRender(){ return _render; }
 	public void setRender(boolean value){ _render = value; }
 	public boolean render(){ return getRender(); }
 	public void render(boolean value){ setRender(value); }
 
-	public Html getRenderTarget(){ return _renderTarget; }
-	public void setRenderTarget(Html value){ _renderTarget = value; }
+	public RenderTargetType getRenderTarget(){ return _renderTarget; }
+	public void setRenderTarget(RenderTargetType value){ _renderTarget = value; }
 
 	public boolean getAutomaticCount(){ return _automaticCount; }
 	public void setAutomaticCount(boolean value){ _automaticCount = value; }
@@ -150,80 +144,5 @@ System.err.println(printDiagnostics());
 	}
 
 
-	public Result process()
-	{
-		String output = null;
-		String format = null;
-
-		// Do some last minute bookwork.
-		if(automaticCount()) setCount(getResultsCount());
-
-		output = getOutput();
-		format = _request.getMediaTypeAsString();
-
-		// First, let's see if we're doing any redirects.
-		// Redirects only happen if we have been specifically told to redirect
-		// And we have an appropriate redirect target
-		// And the format is HTML
-		if(redirect() && getRedirectTarget() != null && MediaType.HTML_UTF_8.is(_request.getMediaType())){
-			return Controller.redirect(getRedirectTarget());
-		}
-
-		if(render() && getRenderTarget() != null && MediaType.HTML_UTF_8.is(_request.getMediaType())){
-			return renderViaStatus(getStatusCode(), getRenderTarget());
-		}
-
-		// No redirects or render requests, so let's output the content according to the requested format and status.
-		return outputViaStatus(getStatusCode(), output, format);
-	}
-
-	
-	private Result outputViaStatus(int status, String output, String format)
-	{
-		switch(status){
-		case HttpStatus.SC_OK:
-			return Controller.ok(output).as(format);
-		case HttpStatus.SC_CREATED:
-			return Controller.created(output).as(format);
-		case HttpStatus.SC_NOT_FOUND:
-			return Controller.notFound(output).as(format);
-		case HttpStatus.SC_BAD_REQUEST:
-			return Controller.badRequest(output).as(format);
-		case HttpStatus.SC_UNAUTHORIZED:
-			return Controller.unauthorized(output).as(format);
-		case HttpStatus.SC_FORBIDDEN:
-			return Controller.forbidden(output).as(format);
-		case HttpStatus.SC_INTERNAL_SERVER_ERROR:
-			return Controller.internalServerError(output).as(format);
-		case HttpStatus.SC_NOT_IMPLEMENTED:
-			return Controller.TODO;
-		default:
-			return Controller.ok(output).as(format);
-		}
-	}
-
-		
-	private Result renderViaStatus(int status, Html output)
-	{
-		switch(status){
-		case HttpStatus.SC_OK:
-			return Controller.ok(output);
-		case HttpStatus.SC_CREATED:
-			return Controller.created(output);
-		case HttpStatus.SC_NOT_FOUND:
-			return Controller.notFound(output);
-		case HttpStatus.SC_BAD_REQUEST:
-			return Controller.badRequest(output);
-		case HttpStatus.SC_UNAUTHORIZED:
-			return Controller.unauthorized(output);
-		case HttpStatus.SC_FORBIDDEN:
-			return Controller.forbidden(output);
-		case HttpStatus.SC_INTERNAL_SERVER_ERROR:
-			return Controller.internalServerError(output);
-		case HttpStatus.SC_NOT_IMPLEMENTED:
-			return Controller.TODO;
-		default:
-			return Controller.ok(output);
-		}
-	}
+	public abstract ResultType process();
 }
