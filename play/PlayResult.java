@@ -15,17 +15,17 @@ import com.subdigit.result.WebResult;
 
 public class PlayResult<ReturnObjectType> extends WebResult<ReturnObjectType, Result, Html, Call>
 {
-	private PlayRequest _request;
+	private PlayRequest<?> _request;
 
 	
-	public PlayResult(PlayRequest value){ super(value); }
+	public PlayResult(PlayRequest<?> value){ super(value); }
 
 
 	protected boolean initialize(BasicRequest<?> value)
 	{
 		boolean initialized = super.initialize(value);
 
-		_request		= (PlayRequest) value;
+		_request		= (PlayRequest<?>) value;
 
 		return initialized;
 	}
