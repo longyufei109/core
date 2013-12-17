@@ -41,10 +41,52 @@ public abstract class BaseInterceptor<UserType, T extends BaseModel<K>, K, X ext
 	protected abstract T setCreateOverrides(UserType userType, T model);
 
 
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> processRequest(String actionParameter){ return processRequest(actionParameter, null); }
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> processRequest(String actionParameter, String value)
+	{
+		WebRequest.Action action = null;
+		
+		// We get to assume if no action was explicitly passed in.
+		if(actionParameter == null) action = WebRequest.Action.GET;
+		else {
+			// Now let's see if this maps to a valid action.
+			try {
+				action = WebRequest.Action.fromString(actionParameter);
+			} catch(IllegalArgumentException e){
+				return unknown(actionParameter);
+			}
+		}
+		
+		return processRequest(action, value);
+	}
+
+	
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> processRequest(WebRequest.Action action){ return processRequest(action, null); }
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> processRequest(WebRequest.Action action, String value)
+	{
+		switch(action){
+			case GET:
+				if(value == null) return getList();
+				else return get(value);
+
+			case CREATE:
+				return create();
+
+			case UPDATE:
+				return update(value);
+
+			case DELETE:
+				return delete(value);
+
+			default:
+				return unknown();
+		}
+	}
+
+
 	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> getList()
 	{
 		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.GET);
-//		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.GET);
 		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
 //		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = new WebResult<T,ResultType,RenderTargetType,RedirectTargetType>(request);
 
@@ -323,14 +365,17 @@ System.err.println("Adding bad request status on create");
 	}
 
 
+	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> unknown(){ return unknown(null); }
 	public WebResult<T,ResultType,RenderTargetType,RedirectTargetType> unknown(String action)
 	{
 		WebRequest<UserType> request = getNewRequest(getNewBroker(), WebRequest.Action.UNKNOWN);
 		WebResult<T,ResultType,RenderTargetType,RedirectTargetType> result = getNewResult(request);
 
+		if(action != null) action += " ";
+
 		result.setSuccess(false);
 		result.setStatusCode(HttpStatus.SC_PAYMENT_REQUIRED);
-		result.addStatus(HttpStatus.SC_PAYMENT_REQUIRED, "Ah, we haven't implemented the '" + action + "' action to do whatever you wanted to do.  Perhaps if the status code requirement was met...", StatusLevel.FATAL);
+		result.addStatus(HttpStatus.SC_PAYMENT_REQUIRED, "Ah, we haven't implemented the '" + action + "'action to do whatever you wanted to do.  Perhaps if the status code requirement was met...", StatusLevel.FATAL);
 
 		return result;
 	}
