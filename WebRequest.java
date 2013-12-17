@@ -138,10 +138,23 @@ public abstract class WebRequest<UserType> extends BasicRequest<String>
 		CREATE,
 		UPDATE,
 		DELETE,
-		AUTHENTICATE,
 		UNKNOWN;
 
 		// I like my enums printed out in lower case, kthxbai.
 		public String toString(){ return name().toLowerCase(); }
+
+		// http://stackoverflow.com/a/2965252
+		public static Action fromString(String text) throws IllegalArgumentException
+		{
+			if(text != null){
+				for(Action action : Action.values()){
+					if(text.equalsIgnoreCase(action.toString())){
+						return action;
+					}
+				}
+			}
+
+			throw new IllegalArgumentException();
+		}
 	}
 }
