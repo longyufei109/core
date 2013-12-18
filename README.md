@@ -11,10 +11,10 @@ have something quick and easy to reuse to build other projects (like the [Authen
 For example, the com.subdigit.startup.morphia package has an abstract MorphiaStartup class which uses the DataConnectorConfiguration class (which extends
 the BaseConfigurationReader) to read property information about the MongoDB instance from the dataconnectorconfiguration.properties file during its instantiation.
 
-Thus all you need to do is to create a class that extends MorphiaStartup, fill in the setup() method with your all needs like prepopulating the DB or whatever
+Thus all you need to do is to create a class that extends MorphiaStartup, fill in the setup() method with all your setup needs like prepopulating the DB or whatever
 else you need for your project upon startup. 
 
-When you instantiate the class, the system connects to your MongoDB instance and populates the necessary mongo, datastore, morphia variables in the static
+When you instantiate the class, the system connects to your MongoDB instance and populates the necessary mongo, datastore, morphia variables into the statically accessible 
 MorphiaDataConnector class.
 
 So when all is said and done, you instantiate your implementation of MorphiaStartup and then access MorphiaDataConnector.getInstance().getDatastore()
@@ -23,7 +23,7 @@ to pass that along to your Morphia BasicDAO objects.  Which incidentally, you wo
 Basically I'm trying to build an opinionated, prepackaged set of frameworkish classes that enables me to do things uniformly in a particular manner each time.
 
 I'm hoping with the growth of this class, I wont have to worry about json output, morphia connections, error message passing, common String conversions, incoming
-requests differences (because one day I use servlets, the next day I use the Play framework).
+request differences (because one day I use servlets, the next day I use the Play framework).
 
 We'll see how far I can get...
 
