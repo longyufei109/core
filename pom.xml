@@ -6,7 +6,7 @@
   <groupId>com.subdigit</groupId>
   <artifactId>core</artifactId>
   <name>Core Module</name>
-  <description>A set of core classes contining various utiltiies and base classes used to build other modules and kickstart project development.</description>
+  <description>A set of core classes containing various utilities and base classes used to build other modules and kickstart project development.</description>
   <url>https://github.com/subdigit/core</url>
   <version>1.0.0</version>
 
