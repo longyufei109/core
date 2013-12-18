@@ -17,7 +17,7 @@ public class DataConnectorConfiguration extends BaseConfigurationReader
 
 	public static final String DEFAULT_DATACONNECTOR_SERVER				= "127.0.0.1";
 	public static final int DEFAULT_DATACONNECTOR_PORT					= 27017;
-	public static final String DEFAULT_DATACONNECTOR_DATASTORE			= "acronymity_datastore";
+	public static final String DEFAULT_DATACONNECTOR_DATASTORE			= "mongo_datastore";
 //	public static final String DEFAULT_DATACONNECTOR_USER				= null;
 //	public static final String DEFAULT_DATACONNECTOR_PASSWORD			= null;
 

@@ -43,25 +43,14 @@
     <jdk.version>                         1.7</jdk.version>
     <junit.version>                       4.11</junit.version>
     <javax.servlet-api.version>           3.0.1</javax.servlet-api.version>
-<!--
-    <twitter4j-core.version>              3.0.3</twitter4j-core.version>
+    <javax.validation.version>            1.1.0.Final</javax.validation.version>
     <commons-lang3.version>               3.1</commons-lang3.version>
     <commons-configuration.version>       1.9</commons-configuration.version>
     <httpclient.version>                  4.3.1</httpclient.version>
-    <httpclient-cache.version>            4.3.1</httpclient-cache.version>
-    <gson.version>                        2.2.2</gson.version>
     <guava.version>                       14.0</guava.version>
-    <google-api-client.version>           1.13.2-beta</google-api-client.version>
-    <google-api-services-oauth2.version>  v2-rev30-1.13.2-beta</google-api-services-oauth2.version>
-    <google-api-services-plus.version>    v1-rev58-1.13.2-beta</google-api-services-plus.version>
-    <google-http-client-jackson.version>  1.13.1-beta</google-http-client-jackson.version>
--->
-<!--
-    <google-api-client.version>           1.17.0-rc</google-api-client.version>
-    <google-api-services-oauth2.version>  v2-rev51-1.17.0-rc</google-api-services-oauth2.version>
-    <google-api-services-plus.version>    v1-rev99-1.17.0-rc</google-api-services-plus.version>
-    <google-http-client-jackson.version>  1.70.0-rc</google-http-client-jackson.version>
--->
+    <morphia.version>                     0.105</morphia.version>
+    <mongo-java-driver.version>           2.11.3</mongo-java-driver.version>
+    <jackson-2.version>                   2.2.3</jackson-2.version>
   </properties>
 
   <repositories>
@@ -93,11 +82,10 @@
       <version>${javax.servlet-api.version}</version>
       <scope>provided</scope>
     </dependency>
-<!--
     <dependency>
-      <groupId>org.twitter4j</groupId>
-      <artifactId>twitter4j-core</artifactId>
-      <version>${twitter4j-core.version}</version>
+      <groupId>javax.validation</groupId>
+      <artifactId>validation-api</artifactId>
+      <version>${javax.validation.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -110,24 +98,9 @@
       <version>${httpclient.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient-cache</artifactId>
-      <version>${httpclient-cache.version}</version>
-    </dependency>
-    <dependency>
       <groupId>commons-configuration</groupId>
       <artifactId>commons-configuration</artifactId>
       <version>${commons-configuration.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.api-client</groupId>
-      <artifactId>google-api-client</artifactId>
-      <version>${google-api-client.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>${gson.version}</version>
     </dependency>
     <dependency>
       <groupId>com.google.guava</groupId>
@@ -135,21 +108,29 @@
       <version>${guava.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.google.http-client</groupId>
-      <artifactId>google-http-client-jackson</artifactId>
-      <version>${google-http-client-jackson.version}</version>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongo-java-driver</artifactId>
+      <version>${mongo-java-driver.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.google.apis</groupId>
-      <artifactId>google-api-services-oauth2</artifactId>
-      <version>${google-api-services-oauth2.version}</version>
+      <groupId>org.mongodb.morphia</groupId>
+      <artifactId>morphia</artifactId>
+      <version>${morphia.version}</version>
     </dependency>
+
+    <!-- the core, which includes Streaming API, shared low-level abstractions (but NOT data-binding) -->
     <dependency>
-      <groupId>com.google.apis</groupId>
-      <artifactId>google-api-services-plus</artifactId>
-      <version>${google-api-services-plus.version}</version>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson-2.version}</version>
     </dependency>
--->
+
+    <!-- databinding; ObjectMapper, JsonNode and related classes are here -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson-2.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
