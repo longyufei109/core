@@ -6,7 +6,7 @@ A set of core classes containing various utilities and base classes used to buil
 Basically, this is my "commons" set of classes that I seem to be writing over and over again.  In here, we have everything from the cheap tools
 to do basic String -> conversions, http connections, database connectivity, servlet catchers, json writers and so on.  Most of these are a result
 finding something that does what I want (like the Jackson JSON parser) and applying it to some base class (com.subdigit.data.BaseModel) so that I
-have something quick and easy to reuse to build other projects (like the [Authentication Module](https://github.com/subdigit/authentication).
+have something quick and easy to reuse to build other projects (like the [Authentication Module](https://github.com/subdigit/authentication)).
 
 For example, the com.subdigit.startup.morphia package has an abstract MorphiaStartup class which uses the DataConnectorConfiguration class (which extends
 the BaseConfigurationReader) to read property information about the MongoDB instance from the dataconnectorconfiguration.properties file during its instantiation.
