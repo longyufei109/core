@@ -40,11 +40,11 @@ com.subdigit.data
 -------------------
 The data package contains the base object and manipulation classes.  At the moment, they are all Morphia based.  The point is to extend off of these to create
 classes specific to your needs.
-BaseModel -> A simple Morphia model to use as a starting point.  Comes with JSON output based on Jackson to be leveraged in a WebResult class
-BaseAccessor -> Extends Morphia's BasicDAO and prepares it with the Morphia instance gotten from the MorphiaDataConnector.
-BaseManager -> Business logic goes here.  If you need to manipulate the BaseModel in anyway, you do it at this level.  Offers some built in calls to make life easier.
-BaseService -> CRUD routines for the Model.  Calls the Manager appropriately and records the transactions of what happened.
-BaseInterceptor -> The final frontier between the code and the web.  Translates the incoming request into a common language and reports back results via a unified object.
+* BaseModel -> A simple Morphia model to use as a starting point.  Comes with JSON output based on Jackson to be leveraged in a WebResult class
+* BaseAccessor -> Extends Morphia's BasicDAO and prepares it with the Morphia instance gotten from the MorphiaDataConnector.
+* BaseManager -> Business logic goes here.  If you need to manipulate the BaseModel in anyway, you do it at this level.  Offers some built in calls to make life easier.
+* BaseService -> CRUD routines for the Model.  Calls the Manager appropriately and records the transactions of what happened.
+* BaseInterceptor -> The final frontier between the code and the web.  Translates the incoming request into a common language and reports back results via a unified object.
 
 com.subdigit.connector
 -------------------
