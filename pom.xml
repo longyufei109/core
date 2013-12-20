@@ -7,7 +7,7 @@
   <name>Core Module</name>
   <description>A set of core classes containing various utilities and base classes used to build other modules and kickstart project development.</description>
   <url>https://github.com/subdigit/core</url>
-  <version>1.0.0</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <licenses>
     <license>
@@ -24,8 +24,8 @@
 
   <scm>
     <url>https://github.com/subdigit/core</url>
-    <connection>scm:git:git://github.com/subdigit/core.git</connection>
-    <developerConnection>scm:git:git@github.com:subdigit/core.git</developerConnection>
+    <connection>scm:git:https://github.com/subdigit/core.git</connection>
+    <developerConnection>scm:git:https://github.com/subdigit/core.git</developerConnection>
   </scm>
 
   <developers>
