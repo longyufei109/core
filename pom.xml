@@ -28,13 +28,16 @@
     <developerConnection>scm:git:git@github.com:subdigit/core.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
-<!--
-  <scm>
-    <url>scm:git:git@github.com:subdigit/core.git</url>
-    <connection>scm:git:git@github.com:subdigit/core.git</connection>
-    <developerConnection>scm:git:git@github.com:subdigit/core.git</developerConnection>
-  </scm>  
--->  
+
+  <!-- http://stackoverflow.com/a/14013645 -->
+  <distributionManagement>
+    <repository>
+        <id>internal.repo</id>
+        <name>Temporary Staging Repository</name>
+        <url>file://${project.build.directory}/${github-site-maven-plugin.branch}</url>
+    </repository>
+  </distributionManagement>
+
   <developers>
     <developer>
       <id>subdigit</id>
@@ -65,7 +68,17 @@
     <maven-source-plugin.version>         2.2.1</maven-source-plugin.version>
     <maven-javadoc-plugin.version>        2.9.1</maven-javadoc-plugin.version>
     <tomcat7-maven-plugin.version>        2.0</tomcat7-maven-plugin.version>
-</properties>
+
+    <!-- github server corresponds to entry in ~/.m2/settings.xml -->
+    <!-- github credentials can be a oauth token: https://github.com/github/maven-plugins#readme -->
+    <!-- so store that as the password field in the settings.xml -->
+    <!-- http://stackoverflow.com/a/14013645 -->
+    <github.global.server>                github</github.global.server>
+    <github-site-maven-plugin.version>    0.9</github-site-maven-plugin.version>
+    <github-site-maven-plugin.user>       subdigit</github-site-maven-plugin.user>
+    <github-site-maven-plugin.repository> core</github-site-maven-plugin.repository>
+    <github-site-maven-plugin.branch>     mvn-repo</github-site-maven-plugin.branch>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -129,10 +142,17 @@
       <artifactId>jackson-databind</artifactId>
       <version>${jackson-2.version}</version>
     </dependency>
+
+    <!-- http://search.maven.org/#browse%7C-1835235742 -->
+    <dependency>
+      <groupId>com.github.github</groupId>
+      <artifactId>site-maven-plugin</artifactId>
+      <version>${github-site-maven-plugin.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
-    <finalName>subdigit-core-${project.version}</finalName>
+    <finalName>subdigit-${project.artifactId}-${project.version}</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -214,6 +234,7 @@
         </configuration>
       </plugin>
 
+      <!-- http://maven.apache.org/maven-release/maven-release-plugin/examples/prepare-release.html -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
@@ -222,8 +243,8 @@
           <tagNameFormat>v@{project.version}</tagNameFormat>
         </configuration>
       </plugin>
-  
-      
+
+      <!-- http://maven.apache.org/plugins/maven-source-plugin/usage.html -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
@@ -231,8 +252,9 @@
         <executions>
           <execution>
             <id>attach-sources</id>
+            <phase>verify</phase>
             <goals>
-              <goal>jar</goal>
+              <goal>jar-no-fork</goal>
             </goals>
           </execution>
         </executions>
@@ -248,6 +270,31 @@
             <goals>
               <goal>jar</goal>
             </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- http://stackoverflow.com/a/14013645 -->
+      <plugin>
+        <groupId>com.github.github</groupId>
+        <artifactId>site-maven-plugin</artifactId>
+        <version>${github-site-maven-plugin.version}</version>
+        <configuration>
+          <message>Maven artifacts for ${project.version}</message>                <!-- git commit message -->
+          <noJekyll>true</noJekyll>                                                <!-- disable webpage processing -->
+          <outputDirectory>${project.build.directory}/${github-site-maven-plugin.branch}</outputDirectory>   <!-- matches distribution management repository url above -->
+          <branch>refs/heads/${github-site-maven-plugin.branch}</branch>                                     <!-- remote branch name -->
+          <includes><include>**/*</include></includes>
+          <repositoryName>${github-site-maven-plugin.repository}</repositoryName>  <!-- github repo name -->
+          <repositoryOwner>${github-site-maven-plugin.user}</repositoryOwner>      <!-- github username  -->
+        </configuration>
+        <executions>
+          <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+          <execution>
+            <goals>
+              <goal>site</goal>
+            </goals>
+            <phase>deploy</phase>
           </execution>
         </executions>
       </plugin>
