@@ -71,3 +71,20 @@ Classes meant to be called at the start of a project to prepare it.  Includes th
 com.subdigit.utilities
 -------------------
 A collection of useful tools like converters and http server connection classes.
+
+
+Maven Repository
+-------------------
+For now, this repository is hosted on GitHub as:
+
+    <repositories>
+      <repository>
+        <id>core-mvn-repo</id>
+        <url>https://raw.github.com/subdigit/core/mvn-repo/</url>
+        <snapshots>
+          <enabled>true</enabled>
+          <updatePolicy>always</updatePolicy>
+        </snapshots>
+      </repository>
+    </repositories>
+
