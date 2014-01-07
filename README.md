@@ -79,7 +79,7 @@ For now, this repository is hosted on GitHub as:
 
     <repositories>
       <repository>
-        <id>core-mvn-repo</id>
+        <id>com.subdigit.core</id>
         <url>https://raw.github.com/subdigit/core/mvn-repo/</url>
         <snapshots>
           <enabled>true</enabled>
